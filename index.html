@@ -1,64 +1,141 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Minecraft 0.0.9a Applet</title>
+    <title>Minecraft (0.0.13a) - Direct CheerpJ 4.1 Launch</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; }
-        #applet_container {
-            width: 854px; /* Match your desired width */
-            height: 480px; /* Match your desired height */
-            margin: auto;
-            display: block; /* Centers the applet */
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: black; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            font-family: sans-serif;
+            color: white;
+        }
+        #gameCanvas {
+            width: 854px; 
+            height: 480px;
+            display: block; 
+            background-color: black; 
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        progress {
+            width: 80%;
+            height: 25px;
+            margin-top: 20px;
         }
     </style>
-    </head>
+    <script src="https://cjrtnc.leaningtech.com/4.1/loader.js"></script>
+</head>
 <body>
 
-    <div id="applet_container">
-        <applet code="com.mojang.minecraft.MinecraftApplet"
-                archive="client/minecraft.jar, client/lwjgl.jar, client/jinput.jar, client/res.jar, client/windows_natives.jar"
-                width="854" height="480" id="MinecraftApplet">
-
-            <param name="separate_jvm" value="true">
-
-            <param name="java_arguments" value="-Xmx512M -Xms256M">
-            <param name="java.library.path" value="client/natives">
-            <param name="java.security.policy" value="client/game.policy">
-            <param name="sun.java2d.nodraw" value="true">
-            <param name="sun.awt.noerasebackground" value="true">
-            <param name="sun.java2d.d3d" value="false">
-            <param name="sun.java2d.opengl" value="false">
-
-            <param name="cheerpj.debug" value="true">
-            <param name="cheerpj.java_home" value="./client"> 
-            <param name="cheerpj.heap_size" value="512M">
-            <param name="cheerpj.library_path" value="client/natives"> 
-            <param name="cheerpj.policy_file" value="client/game.policy">
-            <param name="cheerpj.wasmModules" value="client/gl4es.wasm">
-
-            <param name="cheerpj.mountFS" value="{ '/': 'idbfs' }">
-            <param name="cheerpj.console" value="log">
-            <param name="cheerpj.enableDownloadCallback" value="true">
-
-            <param name="gameDir" value="./client">
-            <param name="assetsDir" value="./client/assets">
-            <param name="username" value="Player">
-            <param name="session" value="0">
-
-            Your browser does not support Java applets.
-        </applet>
+    <div id="loading-screen" class="loading-overlay">
+        <h1>Loading Minecraft...</h1>
+        <p id="loading-status">Initializing CheerpJ...</p>
+        <progress id="download-progress" value="0" max="100"></progress>
     </div>
 
-    <script>
-        // Optional: Listen for CheerpJ's loading progress (the extension might still trigger this)
-        if (window.cheerpj) {
-            cheerpj.enableDownloadCallback(function(url, loaded, total) {
-                const progress = total ? Math.round((loaded / total) * 100) : 0;
-                console.log(`Loading ${url}: ${progress}% (${loaded}/${total})`);
-                // You could update a progress bar here
-            });
-        }
-    </script>
+    <canvas id="gameCanvas"></canvas>
 
+    <script type="module">
+        (async () => {
+            const loadingScreen = document.getElementById('loading-screen');
+            const loadingStatus = document.getElementById('loading-status');
+            const downloadProgress = document.getElementById('download-progress');
+
+            // Define all JAR paths as CheerpJ virtual filesystem paths.
+            // These now correspond to files in your local 'client/' folder.
+            const minecraftJarPath = "/client/minecraft.jar"; // Changed from /app/
+            const lwjglJarPath = "/client/lwjgl.jar";         // Changed from /app/
+            const lwjglUtilJarPath = "/client/lwjgl_util-2.9.3.jar"; // Changed from /app/
+            const jinputJarPath = "/client/jinput.jar";         // Changed from /app/
+
+            const mainClass = "com.mojang.minecraft.Minecraft";
+            
+            const runtimeClasspath = [
+                minecraftJarPath,
+                lwjglJarPath,
+                lwjglUtilJarPath,
+                jinputJarPath
+            ].join(':');
+
+            const launcherArgs = [];
+
+            // --- 1. Initialize CheerpJ ---
+            loadingStatus.textContent = "Initializing CheerpJ...";
+            await cheerpjInit({
+                version: 8,
+                javaProperties: [
+                    // This now points to /client/libraries/ in CheerpJ's virtual filesystem
+                    "java.library.path=/client/libraries/", // Changed from /app/libraries/
+                    "java.awt.headless=false",
+                    "cheerpj.dom.async=true",
+                    "cheerpj.x11.display=true",
+                    "sun.java2d.nodraw=true",
+                    "sun.awt.noerasebackground=true",
+                    "sun.java2d.d3d=false",
+                    "sun.java2d.opengl=false",
+                    "org.lwjgl.Sys.debug=true",
+                ],
+                libraries: {
+                    // This now maps gl4es.wasm from /client/libraries/
+                    "libGL.so.1": "/client/libraries/gl4es.wasm" // Changed from /app/libraries/
+                },
+                enableX11:true,
+                console: "log",
+                enableDownloadCallback: true,
+                // IMPORTANT: You need to tell CheerpJ where your local 'client/' folder is located
+                // so it can map it to its virtual '/client/' path.
+                mountFS: {
+                    "/client/": "./client/" // Maps local './client/' to CheerpJ's '/client/'
+                }
+            });
+
+            console.log("CheerpJ initialized.");
+            loadingStatus.textContent = "CheerpJ initialized. Creating display...";
+
+            // --- 2. Create the CheerpJ display ---
+            cheerpjCreateDisplay(854, 480);
+
+            // --- 3. Link LWJGL to the HTML canvas element ---
+            window.lwjglCanvasElement = document.getElementById("gameCanvas");
+
+            console.log("CheerpJ display created and canvas linked.");
+            loadingStatus.textContent = "Launching Minecraft...";
+
+            // --- Handle CheerpJ Download Progress ---
+            cheerpj.enableDownloadCallback(function(url, loaded, total) {
+                if (total > 0) {
+                    const progress = Math.round((loaded / total) * 100);
+                    downloadProgress.value = loaded;
+                    downloadProgress.max = total;
+                    loadingStatus.textContent = `Downloading: ${url.split('/').pop()} - ${progress}%`;
+                } else {
+                    loadingStatus.textContent = `Downloading: ${url.split('/').pop()}`;
+                }
+            });
+
+            // --- 4. Run the Minecraft application ---
+            await cheerpjRunMain(
+                mainClass,
+                runtimeClasspath,
+                launcherArgs
+            );
+
+            console.log("Minecraft application started.");
+            loadingScreen.style.display = 'none'; // Hide loading screen when game starts
+        })();
+    </script>
 </body>
 </html>
