@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Minecraft (0.0.13a) - Direct CheerpJ 4.1 Launch</title>
+    <title>Minecraft (c0.0.9a) - Direct CheerpJ 4.1 Launch</title>
     <style>
         body { 
             margin: 0; 
@@ -55,11 +55,10 @@
             const downloadProgress = document.getElementById('download-progress');
 
             // Define all JAR paths as CheerpJ virtual filesystem paths.
-            // These now correspond to files in your local 'client/' folder.
-            const minecraftJarPath = "/client/minecraft.jar"; // Changed from /app/
-            const lwjglJarPath = "/client/lwjgl.jar";         // Changed from /app/
-            const lwjglUtilJarPath = "/client/lwjgl_util-2.9.3.jar"; // Changed from /app/
-            const jinputJarPath = "/client/jinput.jar";         // Changed from /app/
+            const minecraftJarPath = "/client/minecraft.jar"; 
+            const lwjglJarPath = "/client/lwjgl.jar";         
+            const lwjglUtilJarPath = "/client/lwjgl_util-2.9.3.jar"; 
+            const jinputJarPath = "/client/jinput.jar";         
 
             const mainClass = "com.mojang.minecraft.Minecraft";
             
@@ -77,8 +76,7 @@
             await cheerpjInit({
                 version: 8,
                 javaProperties: [
-                    // This now points to /client/libraries/ in CheerpJ's virtual filesystem
-                    "java.library.path=/client/libraries/", // Changed from /app/libraries/
+                    "java.library.path=/client/libraries/",
                     "java.awt.headless=false",
                     "cheerpj.dom.async=true",
                     "cheerpj.x11.display=true",
@@ -89,16 +87,13 @@
                     "org.lwjgl.Sys.debug=true",
                 ],
                 libraries: {
-                    // This now maps gl4es.wasm from /client/libraries/
-                    "libGL.so.1": "/client/libraries/gl4es.wasm" // Changed from /app/libraries/
+                    "libGL.so.1": "/client/libraries/gl4es.wasm"
                 },
                 enableX11:true,
                 console: "log",
-                enableDownloadCallback: true,
-                // IMPORTANT: You need to tell CheerpJ where your local 'client/' folder is located
-                // so it can map it to its virtual '/client/' path.
+                enableDownloadCallback: true, // This enables the callback, but doesn't define it yet
                 mountFS: {
-                    "/client/": "./client/" // Maps local './client/' to CheerpJ's '/client/'
+                    "/client/": "./client/" 
                 }
             });
 
@@ -114,7 +109,8 @@
             console.log("CheerpJ display created and canvas linked.");
             loadingStatus.textContent = "Launching Minecraft...";
 
-            // --- Handle CheerpJ Download Progress ---
+            // --- Handle CheerpJ Download Progress (MOVED HERE) ---
+            // NOW that cheerpjInit() has completed, 'cheerpj' is defined and safe to use.
             cheerpj.enableDownloadCallback(function(url, loaded, total) {
                 if (total > 0) {
                     const progress = Math.round((loaded / total) * 100);
@@ -134,7 +130,7 @@
             );
 
             console.log("Minecraft application started.");
-            loadingScreen.style.display = 'none'; // Hide loading screen when game starts
+            loadingScreen.style.display = 'none'; 
         })();
     </script>
 </body>
