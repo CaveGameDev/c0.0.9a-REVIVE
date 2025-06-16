@@ -50,9 +50,9 @@
             });
 
             // Define the classpath for Minecraft and all its dependencies.
+            // REMOVED: client/lwjgl_util_applet.jar.pack.lzma
             const classPath = [
                 "/app/client/minecraft.jar",           // Contains the com.mojang.minecraft.Minecraft main class
-                "/app/client/lwjgl_applet.jar.pack.lzma", // Core LWJGL applet JAR
                 "/app/client/lwjgl.jar.pack.lzma",     // Core LWJGL JAR
                 "/app/client/jinput.jar.pack.lzma",    // JInput for input handling
                 "/app/client/lwjgl_util.jar.pack.lzma",// LWJGL utility JAR
@@ -65,20 +65,16 @@
             
             try {
                 // Define command-line arguments for Minecraft.
-                // Only width and height are included now.
                 const minecraftArgs = [
                     "-width", "854",   // Set the width
                     "-height", "480"   // Set the height
-                    // Add other arguments if needed by your specific Minecraft version, e.g.:
-                    // "-sessionid", "12345", 
-                    // "--gameDir", "/app/minecraft_data" 
                 ];
 
                 // Execute the main class with the defined arguments.
                 const exitCode = await cheerpjRunMain(
                     "com.mojang.minecraft.Minecraft", 
                     classPath,
-                    ...minecraftArgs // Spread the arguments array into individual arguments
+                    ...minecraftArgs
                 );
                 console.log(`Minecraft exited with code: ${exitCode}`);
             } catch (e) {
