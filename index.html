@@ -26,13 +26,10 @@
             <param name="java.security.policy" value="client/game.policy">
             <param name="sun.java2d.nodraw" value="true">
             <param name="sun.awt.noerasebackground" value="true">
-            <param name="sun.java2d.d3d=false" value="false">
-            <param name="sun.java2d.opengl=false" value="false">
+            <param name="sun.java2d.d3d" value="false">
+            <param name="sun.java2d.opengl" value="false">
 
-            <param name="cheerpj.debug" value="true"> <param name="cheerpj.java_home" value="./client/cheerpj_runtime"> 
-            <param name="cheerpj.heap_size" value="512M"> <param name="cheerpj.library_path" value="client/natives"> <param name="cheerpj.policy_file" value="client/game.policy"> <param name="cheerpj.wasmModules" value="client/cheerpj_runtime/gl4es.wasm">
-
-            <param name="cheerpj.mountFS" value="{ '/': 'idbfs' }"> <param name="cheerpj.console" value="log"> <param name="cheerpj.enableDownloadCallback" value="true"> <param name="gameDir" value="./client">
+            <param name="gameDir" value="./client">
             <param name="assetsDir" value="./client/assets">
             <param name="username" value="Player">
             <param name="session" value="0">
@@ -41,16 +38,5 @@
         </applet>
     </div>
 
-    <script>
-        // Optional: Listen for CheerpJ's loading progress
-        if (window.cheerpj) {
-            cheerpj.enableDownloadCallback(function(url, loaded, total) {
-                const progress = total ? Math.round((loaded / total) * 100) : 0;
-                console.log(`Loading ${url}: ${progress}% (${loaded}/${total})`);
-                // You could update a progress bar here
-            });
-        }
-    </script>
-
-</body>
+    </body>
 </html>
