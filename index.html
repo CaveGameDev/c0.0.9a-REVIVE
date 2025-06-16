@@ -3,72 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft Applet</title>
+    <title>Minecraft (CheerPJ)</title>
     <style>
+        /* Essential styles for fullscreen rendering */
         body, html {
             margin: 0;
             padding: 0;
-            overflow: hidden;
+            overflow: hidden; /* Hides scrollbars if content is slightly larger than viewport */
             width: 100%;
             height: 100%;
-            background-color: #000;
+            background-color: #000; /* Sets background to black before the game loads */
         }
-        #applet-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        #game-container {
+            width: 100vw; /* Occupy full viewport width */
+            height: 100vh; /* Occupy full viewport height */
+            display: flex; /* Use flexbox for centering */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+        }
+        canvas {
+            display: block; /* Ensures the canvas fills its container and avoids extra space below */
+            width: 100%; /* Make canvas fill its container */
+            height: 100%; /* Make canvas fill its container */
         }
     </style>
     <script src="https://cjrtnc.leaningtech.com/4.0/loader.js"></script>
 </head>
 <body>
 
-    <div id="applet-container">
-        <cheerpj-applet
-            code="org.lwjgl.util.applet.AppletLoader"
-            archive="client/lwjgl_util_applet.jar, client/lzma.jar"
-            codebase="https://009-alpha-test.netlify.app/"
-            width="854"
-            height="480"
-        >
-            <param name="al_title" value="Minecraft">
-            <param name="al_main" value="com.mojang.minecraft.MinecraftApplet">
-            <param name="al_logo" value="client/logo_small.png">
-            <param name="al_progressbar" value="appletprogress.gif">
-
-            <param name="al_jars" value="client/lwjgl_applet.jar.pack.lzma, client/lwjgl.jar.pack.lzma, client/jinput.jar.pack.lzma, client/lwjgl_util.jar.pack.lzma, client/res.jar.lzma, client/minecraft.jar">
-            
-            <param name="al_windows" value="windows_natives.jar.lzma"> 
-            
-            <param name="al_version" value="5.17">
-            <param name="separate_jvm" value="true">
-            <param name="java_arguments" value="-Dsun.java2d.noddraw=true -Dsun.awt.noerasebackground=true -Dsun.java2d.d3d=false -Dsun.java2d.opengl=false -Dsun.java2d.pmoffscreen=false">
-            <param name="al_bgcolor" value="000000">
-            <param name="al_fgcolor" value="ffffff">
-            <param name="al_errorcolor" value="ff0000">
-            <param name="al_prepend_host" value="true">
-        </cheerpj-applet>
+    <div id="game-container">
+        <canvas id="minecraft-canvas"></canvas> 
     </div>
 
     <script type="module">
+        // Ensure the DOM is fully loaded before trying to access elements or initialize CheerPJ.
         document.addEventListener('DOMContentLoaded', async () => {
+            // Tell LWJGL (through CheerPJ) which HTML canvas element to use for rendering.
+            window.lwjglCanvasElement = document.getElementById('minecraft-canvas');
+
+            // Initialize CheerPJ with debugging enabled and necessary Java properties.
             await cheerpjInit({
-                enableDebug: true, // Keep debug mode on
-                // Force CheerpJ to load this specific JAR and make it available
-                paths: {
-                    '/app/windows_natives.jar.lzma': 'client/windows_natives.jar.lzma' 
-                    // This maps the server path 'client/windows_natives.jar.lzma'
-                    // to the CheerpJ virtual file system path '/app/windows_natives.jar.lzma'
-                },
-                // If the applet needs to know about java.library.path, you might add it here.
-                // However, CheerPJ's JNI bridge often handles this automatically for known libraries like LWJGL.
-                // javaProperties: {
-                //     'java.library.path': '/app/' // Points to the root of our mounted files
-                // }
+                enableDebug: true, // Keep this on for troubleshooting! It provides verbose console output.
+                // Set the java.library.path to where CheerpJ will mount your client/ directory.
+                // This tells the Java application where to look for native libraries (like those from LWJGL).
+                javaProperties: ["java.library.path=/app/client"] 
             });
-            console.log('CheerPJ initialized.');
+
+            // Define the classpath for Minecraft and all its dependencies.
+            const classPath = [
+                "/app/client/minecraft.jar",           // Contains the com.mojang.minecraft.Minecraft main class
+                "/app/client/lwjgl_applet.jar.pack.lzma", // Core LWJGL applet JAR
+                "/app/client/lwjgl.jar.pack.lzma",     // Core LWJGL JAR
+                "/app/client/jinput.jar.pack.lzma",    // JInput for input handling
+                "/app/client/lwjgl_util.jar.pack.lzma",// LWJGL utility JAR
+                "/app/client/res.jar.lzma",            // Resource JAR, if your Minecraft version uses it
+                "/app/client/lzma.jar",                // Required by CheerpJ for .lzma decompression
+                "/app/client/windows_natives.jar.lzma" // The native libraries JAR for Windows
+            ].join(':'); 
+
+            console.log("Attempting to start Minecraft main class...");
+            
+            try {
+                // Define command-line arguments for Minecraft.
+                // Only width and height are included now.
+                const minecraftArgs = [
+                    "-width", "854",   // Set the width
+                    "-height", "480"   // Set the height
+                    // Add other arguments if needed by your specific Minecraft version, e.g.:
+                    // "-sessionid", "12345", 
+                    // "--gameDir", "/app/minecraft_data" 
+                ];
+
+                // Execute the main class with the defined arguments.
+                const exitCode = await cheerpjRunMain(
+                    "com.mojang.minecraft.Minecraft", 
+                    classPath,
+                    ...minecraftArgs // Spread the arguments array into individual arguments
+                );
+                console.log(`Minecraft exited with code: ${exitCode}`);
+            } catch (e) {
+                console.error("An error occurred while running Minecraft:", e);
+                alert("Failed to start Minecraft. Check the browser console for details.");
+            }
         });
     </script>
 
