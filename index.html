@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Your Minecraft (c0.0.9a)</title>
+        <title>Minecraft Alpha Test</title>
         <script src="https://cjrtnc.leaningtech.com/3_20250430_1221/loader.js"></script>
         
         <style>
@@ -65,7 +65,7 @@
     </head>
     <body>
         <header>
-            <h1>Your Minecraft (c0.0.9a)</h1>
+            <h1>Minecraft Alpha Test</h1>
         </header>
         <main>
             <div class="desktop-only">
@@ -86,9 +86,7 @@
         </main>
 
         <script type="module">
-            // This helper function is for downloading files, but for c0.0.9a,
-            // we expect `minecraft.jar` to be local, so this specific download isn't used for the main JAR.
-            // It's included as it was part of the Browsercraft example's structure.
+            // This helper function is for downloading files.
             async function downloadFileToCheerpJ(url, destPath, progressCallback) {
                 const response = await fetch(url);
                 const reader = response.body.getReader();
@@ -117,7 +115,7 @@
                 });
             }
 
-            // The MinecraftClient class, adapted for c0.0.9a
+            // The MinecraftClient class, adapted for c0.0.9a and `/app/client/` virtual path
             class MinecraftClient {
                 #progress;
                 #button;
@@ -127,17 +125,15 @@
 
                 constructor() {
                     this.#button = document.querySelector('button');
-                    // Attach the run method to the button click event
                     this.#button.addEventListener('click', () => this.run());
 
                     this.#progress = document.querySelector('progress');
-                    this.#progress.style.display = 'none'; // Initially hidden
+                    this.#progress.style.display = 'none';
 
                     this.#intro = document.querySelector('.intro');
 
-                    // CheerpJ will create its canvas inside this display div
                     this.#display = document.querySelector('.display');
-                    cheerpjCreateDisplay(-1, -1, this.#display); // -1, -1 lets CheerpJ use parent size
+                    cheerpjCreateDisplay(-1, -1, this.#display); 
 
                     this.#isRunning = false;
                 }
@@ -151,18 +147,17 @@
                     }
                     this.#isRunning = true; 
 
-                    this.#intro.style.display = 'none'; // Hide the intro text
-                    this.#progress.style.display = 'none'; // No download progress for local JAR
-                    this.#display.style.display = 'unset'; // Show the area where the game will appear
+                    this.#intro.style.display = 'none'; 
+                    this.#progress.style.display = 'none'; 
+                    this.#display.style.display = 'unset'; 
                     
                     // Define the classpath for Minecraft c0.0.9a.
-                    // All JARs are expected to be in CheerpJ's virtual /app/ 
-                    // (which maps to your local `client/` folder).
+                    // All JARs are explicitly expected to be in CheerpJ's virtual `/app/client/`
                     const runtimeClasspath = [
-                        "/app/minecraft.jar",           // Your c0.0.9a JAR
-                        "/app/lwjgl.jar",
-                        "/app/lwjgl_util-2.9.3.jar",    // Assuming you have this version
-                        "/app/jinput.jar"               // Assuming you have jinput.jar
+                        "/app/client/minecraft.jar",           // Your c0.0.9a JAR
+                        "/app/client/lwjgl.jar",
+                        "/app/client/lwjgl_util-2.9.3.jar",    // Assuming you have this version
+                        "/app/client/jinput.jar"               // Assuming you have jinput.jar
                     ].join(':');
 
                     // Launch Minecraft c0.0.9a with its specific main class
@@ -182,12 +177,11 @@
             }
 
             // --- CheerpJ Initialization (using CheerpJ 3.x parameters) ---
-            // This async function starts the CheerpJ runtime as soon as the script module loads.
             (async () => {
                 await cheerpjInit({
-                    version: 8, // Target Java 8 runtime within CheerpJ
+                    version: 8, 
                     javaProperties: [
-                        "java.library.path=/app/libraries/", // CheerpJ looks for native libs here
+                        "java.library.path=/app/client/natives/", // Native libraries now explicitly looked for at virtual /app/client/natives/
                         "java.awt.headless=false",
                         "cheerpj.dom.async=true",
                         "cheerpj.x11.display=true",
@@ -198,24 +192,20 @@
                         "org.lwjgl.Sys.debug=true",
                     ],
                     libraries: {
-                        "libGL.so.1": "/app/libraries/gl4es.wasm" // Map OpenGL calls to gl4es.wasm
+                        "libGL.so.1": "/app/client/natives/gl4es.wasm" // OpenGL now explicitly mapped from virtual /app/client/natives/
                     },
                     enableX11: true,
-                    // Preload resources for CheerpJ's internal Java runtime.
-                    // This large block is for performance and is copied directly from the Browsercraft example.
                     preloadResources: {
                         "/lt/8/jre/lib/rt.jar": [0, 131072, 1310720, 1572864, 4456448, 4849664, 5111808, 5505024, 7995392, 8126464, 9699328, 9830400, 9961472, 11534336, 11665408, 12189696, 12320768, 12582912, 13238272, 13369344, 15073280, 15335424, 15466496, 15597568, 15990784, 16121856, 16252928, 16384000, 16777216, 16908288, 17039360, 17563648, 17694720, 17825792, 17956864, 18087936, 18219008, 18612224, 18743296, 18874368, 19005440, 19136512, 19398656, 19791872, 20054016, 20709376, 20840448, 21757952, 21889024, 26869760],
                         "/lt/etc/users": [0, 131072], "/lt/etc/localtime": [], "/lt/8/jre/lib/cheerpj-awt.jar": [0, 131072], "/lt/8/lib/ext/meta-index": [0, 131072], "/lt/8/lib/ext": [], "/lt/8/lib/ext/index.list": [], "/lt/8/lib/ext/localedata.jar": [], "/lt/8/jre/lib/jsse.jar": [0, 131072, 786432, 917504], "/lt/8/jre/lib/jce.jar": [0, 131072], "/lt/8/jre/lib/charsets.jar": [0, 131072, 1703936, 1835008], "/lt/8/jre/lib/resources.jar": [0, 131072, 917504, 1179648], "/lt/8/jre/lib/javaws.jar": [0, 131072, 1441792, 1703936], "/lt/8/lib/ext/sunjce_provider.jar": [], "/lt/8/lib/security/java.security": [0, 131072], "/lt/8/jre/lib/meta-index": [0, 131072], "/lt/8/jre/lib": [], "/lt/8/lib/accessibility.properties": [], "/lt/8/lib/fonts/LucidaSansRegular.ttf": [], "/lt/8/lib/currency.data": [0, 131072], "/lt/8/lib/currency.properties": [], "/lt/libraries/libGLESv2.so.1": [0, 262144], "/lt/libraries/libEGL.so.1": [0, 262144], "/lt/8/lib/fonts/badfonts.txt": [], "/lt/8/lib/fonts": [], "/lt/etc/hosts": [], "/lt/etc/resolv.conf": [0, 131072], "/lt/8/lib/fonts/fallback": [], "/lt/fc/fonts/fonts.conf": [0, 131072], "/lt/fc/ttf": [], "/lt/fc/cache/e21edda6a7db77f35ca341e0c3cb2a22-le32d8.cache-7": [0, 131072], "/lt/fc/ttf/LiberationSans-Regular.ttf": [0, 131072, 262144, 393216], "/lt/8/lib/jaxp.properties": [], "/lt/etc/timezone": [], "/lt/8/lib/tzdb.dat": [0, 131072]
                     },
-                    // Map your local './client/' folder to CheerpJ's virtual '/app/'
-                    // This is where CheerpJ will find your minecraft.jar, LWJGL JARs, and libraries folder.
+                    // This maps your local './client/' folder to the virtual '/app/client/' in CheerpJ
                     mountFS: {
-                        "/app/": "./client/" 
+                        "/app/client/": "./client/" 
                     }
                 });
                 console.log("CheerpJ initialization completed.");
 
-                // Initialize the MinecraftClient which handles button clicks and game launch
                 const mc = new MinecraftClient();
             })();
         </script>
