@@ -1,0 +1,10 @@
+grant {
+    permission java.security.AllPermission;
+    permission java.lang.RuntimePermission "modifyThreadGroup";
+    permission java.lang.RuntimePermission "modifyThread";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.awt";
+    permission java.util.PropertyPermission "*", "read,write";
+    permission java.io.FilePermission "<<ALL FILES>>", "read,write,execute,delete";
+    permission java.net.SocketPermission "*", "connect,resolve";
+    permission java.awt.AWTPermission "*";
+};
