@@ -44,39 +44,88 @@
             // Initialize CheerPJ with debugging enabled and necessary Java properties.
             await cheerpjInit({
                 enableDebug: true,
-                javaProperties: ["java.library.path=/app/client"] 
+                // These are Java System Properties, passed to the JVM itself.
+                javaProperties: [
+                    "java.library.path=/app/client", // Path where native libs are extracted by CheerpJ
+                    "sun.java2d.nodraw=true",
+                    "sun.awt.noerasebackground=true",
+                    "sun.java2d.d3d=false",
+                    "sun.java2d.opengl=false"
+                ] 
             });
 
-            // Define the classpath for Minecraft and all its dependencies, with specific loading order.
+            // Define the classpath for Minecraft and all its dependencies.
+            // Critical Order: minecraft.jar -> lzma.jar -> natives JAR -> LWJGL JARs.
             const classPath = [
-                "/app/client/minecraft.jar",           // 1. Minecraft's main JAR (first to be loaded)
-                "/app/client/lzma.jar",                // 2. LZMA decompressor (essential for other .lzma files)
-                "/app/client/lwjgl.jar.pack.lzma",     // 3. Core LWJGL JAR
-                "/app/client/jinput.jar.pack.lzma",    // 4. JInput for input handling
-                "/app/client/lwjgl_util.jar.pack.lzma",// 5. LWJGL utility JAR
-                "/app/client/res.jar.lzma",            // 6. Resource JAR, if your Minecraft version uses it
-                "/app/client/windows_natives.jar.lzma" // 7. The native libraries JAR for Windows
-            ].join(':'); // JARs in the classpath are separated by a colon (':').
+                "/app/client/minecraft.jar",           // THIS IS THE MAIN GAME JAR (contains com.mojang.minecraft.Minecraft)
+                "/app/client/lzma.jar",                // Required by CheerpJ for .lzma decompression
+                "/app/client/windows_natives.jar.lzma",// **MOVED**: LWJGL Native libraries (load BEFORE lwjgl.jar)
+                "/app/client/lwjgl.jar.pack.lzma",     // Core LWJGL JAR
+                "/app/client/jinput.jar.pack.lzma",    // JInput for input handling
+                "/app/client/lwjgl_util.jar.pack.lzma",// LWJGL utility JAR
+                "/app/client/res.jar.lzma"             // Resource JAR, if your Minecraft version uses it
+            ].join(':'); 
 
-            console.log("Attempting to start Minecraft main class...");
+            console.log("CheerpJ runtime initialized. Attempting to start Minecraft...");
             
-            try {
-                // Define command-line arguments for Minecraft.
-                const minecraftArgs = [
-                    "-width", "854",   // Set the width
-                    "-height", "480"   // Set the height
-                ];
+            // Define different sets of command-line arguments to try
+            const launchAttempts = [
+                { 
+                    name: "Attempt 1: Standard Width/Height", 
+                    args: ["-width", "854", "-height", "480"] 
+                },
+                { 
+                    name: "Attempt 2: Width/Height with Default Username (e.g., for offline play)", 
+                    args: ["DefaultPlayer", "-width", "854", "-height", "480"] 
+                },
+                { 
+                    name: "Attempt 3: Width/Height with Username & Session ID", 
+                    // Session ID is often needed for offline mode in some versions. Can be any unique string.
+                    args: ["DefaultPlayer", "-sessionid", "CJP_Session12345", "-width", "854", "-height", "480"] 
+                },
+                { 
+                    name: "Attempt 4: Fullscreen with Username & Session ID", 
+                    // Some versions might prefer fullscreen. This combines the most common arguments.
+                    args: ["DefaultPlayer", "-sessionid", "CJP_Session12345", "-fullscreen"] 
+                }
+                // Add more specific argument sets here if you learn more about your Minecraft version's needs:
+                // { name: "Attempt 5: Custom Game Directory", args: ["--gameDir", "/app/minecraft_data", "-width", "854", "-height", "480"] }
+            ];
 
-                // Execute the main class with the defined arguments.
-                const exitCode = await cheerpjRunMain(
-                    "com.mojang.minecraft.Minecraft", 
-                    classPath,
-                    ...minecraftArgs
-                );
-                console.log(`Minecraft exited with code: ${exitCode}`);
-            } catch (e) {
-                console.error("An error occurred while running Minecraft:", e);
-                alert("Failed to start Minecraft. Check the browser console for details.");
+            let success = false;
+            let lastError = null;
+
+            for (let i = 0; i < launchAttempts.length; i++) {
+                const attempt = launchAttempts[i];
+                console.log(`\n--- ${attempt.name} (${i + 1}/${launchAttempts.length}) ---`);
+                
+                try {
+                    // Execute the main class, 'com.mojang.minecraft.Minecraft', from the loaded JARs.
+                    const exitCode = await cheerpjRunMain(
+                        "com.mojang.minecraft.Minecraft", 
+                        classPath,
+                        ...attempt.args
+                    );
+                    console.log(`Minecraft exited with code: ${exitCode}`);
+                    success = true;
+                    break; // Exit loop if successful
+                } catch (e) {
+                    console.error(`Attempt ${i + 1} failed:`, e);
+                    lastError = e;
+                    // If it's a ClassNotFoundException for the main class, it's a critical path issue
+                    // which might not be resolved by different args, but we'll still try other args.
+                    if (e instanceof Error && e.message.includes("com.mojang.minecraft.Minecraft")) {
+                        console.warn("Main Minecraft class not found. Check classpath and file integrity.");
+                    } else if (e instanceof Error && e.message.includes("LWJGLException")) {
+                        console.warn("LWJGL error encountered. Check native JARs and java.library.path.");
+                    }
+                    // Continue to next attempt
+                }
+            }
+
+            if (!success) {
+                console.error("All launch attempts failed to start Minecraft.");
+                alert(`Failed to start Minecraft after multiple attempts. Last error: ${lastError ? lastError.message : "Unknown error"}. Please check the browser console for more details.`);
             }
         });
     </script>
