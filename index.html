@@ -52,38 +52,26 @@
             });
 
             // Define the classpath for Minecraft and all its dependencies.
-            // Using your newly signed 'my_classic_minecraft.jar'
-            // We are attempting a DIRECT launch of Minecraft's main class first.
+            // THIS LINE IS CHANGED TO USE 'minecraft.jar'
             const classPath = [
-                "/app/client/my_classic_minecraft.jar", // <--- Your newly created and signed JAR
-                // Commenting out LaunchWrapper and jopt-simple for direct launch attempt:
-                // "/app/client/launchwrapper.jar",       
-                // "/app/client/jopt-simple-4.5.jar",
-                // Ensure these other JARs are also uploaded to /client/ and are correctly signed if they have old signatures:
-                "/app/client/windows_natives.jar",     
-                "/app/client/lwjgl.jar",               
-                "/app/client/jinput.jar",              
-                "/app/client/res.jar"                  
+                "/app/client/minecraft.jar", // <--- CHANGED FROM my_classic_minecraft.jar
+                "/app/client/windows_natives.jar",       
+                "/app/client/lwjgl.jar",                 
+                "/app/client/jinput.jar",               
+                "/app/client/res.jar"                   
             ].join(':'); 
 
             console.log("CheerPJ runtime initialized. Attempting to start classic Minecraft directly...");
             
             try {
-                // Attempting direct launch of com.mojang.minecraft.Minecraft
-                // If this doesn't work, we might need to revert to using LaunchWrapper
-                // if AlphaVanillaTweaker is essential for this specific version.
                 const exitCode = await cheerpjRunMain(
                     "com.mojang.minecraft.Minecraft", // Direct main class for very old Minecraft
                     classPath,
-                    // No arguments needed for initial direct launch of very early Minecraft
-                    // If the game expects specific args (e.g., username), they would go here:
-                    // "-username", "Player"
                 );
                 console.log(`Minecraft exited with code: ${exitCode}`);
             } catch (e) {
                 console.error("Failed to start Minecraft directly:", e);
                 alert(`Failed to start Minecraft. Please check the browser console for more details.`);
-                // You can add more specific error handling here if desired.
                 if (e instanceof Error && e.message.includes("ClassNotFoundException")) {
                     console.warn("A class was not found. Check your classPath for missing or incorrectly named JARs.");
                 } else if (e instanceof Error && e.message.includes("NoSuchMethodError")) {
