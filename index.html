@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft (CheerPJ) - LaunchWrapper + JOpt Simple</title>
+    <title>Minecraft (CheerPJ) - Classic Attempt</title>
     <style>
         /* Essential styles for fullscreen rendering */
         body, html {
@@ -40,7 +40,7 @@
             window.lwjglCanvasElement = document.getElementById('minecraft-canvas');
 
             await cheerpjInit({
-                enableDebug: true,
+                enableDebug: true, // Keep debug enabled for now for easier troubleshooting
                 javaProperties: [
                     "java.library.path=/app/client", // Path where native libs are extracted by CheerpJ
                     "sun.java2d.nodraw=true",
@@ -52,78 +52,43 @@
             });
 
             // Define the classpath for Minecraft and all its dependencies.
-            // NOW INCLUDING JOPT-SIMPLE-4.5.JAR
-            // IMPORTANT: Ensure all listed .jar files are uploaded to your /client/ directory
-            // and are not corrupted!
+            // Using your newly signed 'my_classic_minecraft.jar'
+            // We are attempting a DIRECT launch of Minecraft's main class first.
             const classPath = [
-                "/app/client/launchwrapper.jar",       
-                "/app/client/jopt-simple-4.5.jar",     // <-- NEW: Added jopt-simple-4.5.jar here
-                "/app/client/minecraft.jar",           
+                "/app/client/my_classic_minecraft.jar", // <--- Your newly created and signed JAR
+                // Commenting out LaunchWrapper and jopt-simple for direct launch attempt:
+                // "/app/client/launchwrapper.jar",       
+                // "/app/client/jopt-simple-4.5.jar",
+                // Ensure these other JARs are also uploaded to /client/ and are correctly signed if they have old signatures:
                 "/app/client/windows_natives.jar",     
                 "/app/client/lwjgl.jar",               
                 "/app/client/jinput.jar",              
                 "/app/client/res.jar"                  
             ].join(':'); 
 
-            console.log("CheerPJ runtime initialized. Attempting to start Minecraft via LaunchWrapper...");
+            console.log("CheerPJ runtime initialized. Attempting to start classic Minecraft directly...");
             
-            const launchAttempts = [
-                { 
-                    name: "Attempt 1: Standard Width/Height (with Tweaker)", 
-                    args: ["--tweakClass", "AlphaVanillaTweaker", "-width", "854", "-height", "480"] 
-                },
-                { 
-                    name: "Attempt 2: Width/Height with Default Username (with Tweaker)", 
-                    args: ["--tweakClass", "AlphaVanillaTweaker", "DefaultPlayer", "-width", "854", "-height", "480"] 
-                },
-                { 
-                    name: "Attempt 3: Width/Height with Username & Session ID (with Tweaker)", 
-                    args: ["--tweakClass", "AlphaVanillaTweaker", "DefaultPlayer", "-sessionid", "CJP_Session12345", "-width", "854", "-height", "480"] 
-                },
-                { 
-                    name: "Attempt 4: Fullscreen with Username & Session ID (with Tweaker)", 
-                    args: ["--tweakClass", "AlphaVanillaTweaker", "DefaultPlayer", "-sessionid", "CJP_Session12345", "-fullscreen"] 
+            try {
+                // Attempting direct launch of com.mojang.minecraft.Minecraft
+                // If this doesn't work, we might need to revert to using LaunchWrapper
+                // if AlphaVanillaTweaker is essential for this specific version.
+                const exitCode = await cheerpjRunMain(
+                    "com.mojang.minecraft.Minecraft", // Direct main class for very old Minecraft
+                    classPath,
+                    // No arguments needed for initial direct launch of very early Minecraft
+                    // If the game expects specific args (e.g., username), they would go here:
+                    // "-username", "Player"
+                );
+                console.log(`Minecraft exited with code: ${exitCode}`);
+            } catch (e) {
+                console.error("Failed to start Minecraft directly:", e);
+                alert(`Failed to start Minecraft. Please check the browser console for more details.`);
+                // You can add more specific error handling here if desired.
+                if (e instanceof Error && e.message.includes("ClassNotFoundException")) {
+                    console.warn("A class was not found. Check your classPath for missing or incorrectly named JARs.");
+                } else if (e instanceof Error && e.message.includes("NoSuchMethodError")) {
+                    console.warn("Method not found. Might be a version incompatibility between Java libraries.");
                 }
-            ];
-
-            let success = false;
-            let lastError = null;
-
-            for (let i = 0; i < launchAttempts.length; i++) {
-                const attempt = launchAttempts[i];
-                console.log(`\n--- ${attempt.name} (${i + 1}/${launchAttempts.length}) ---`);
-                
-                try {
-                    const exitCode = await cheerpjRunMain(
-                        "net.minecraft.launchwrapper.Launch", 
-                        classPath,
-                        ...attempt.args
-                    );
-                    console.log(`Minecraft (LaunchWrapper) exited with code: ${exitCode}`);
-                    success = true;
-                    break; 
-                } catch (e) {
-                    console.error(`Attempt ${i + 1} failed:`, e);
-                    lastError = e;
-                    if (e instanceof Error && e.message.includes("net.minecraft.launchwrapper.Launch")) {
-                        console.warn("LaunchWrapper main class not found. Ensure 'launchwrapper.jar' is present and correct.");
-                    } else if (e instanceof Error && e.message.includes("AlphaVanillaTweaker")) {
-                         console.warn("AlphaVanillaTweaker not found or failed. Ensure it's in minecraft.jar or another loaded JAR.");
-                    } else if (e instanceof Error && e.message.includes("error in opening zip file")) {
-                        console.warn("Error opening JAR file. This often means the JAR is corrupted or incomplete. Check all JARs.");
-                    } else if (e instanceof Error && e.message.includes("LWJGLException")) {
-                        console.warn("LWJGL error encountered. Ensure LWJGL JARs and native libraries are correct and loaded.");
-                    } else if (e instanceof Error && e.message.includes("CertPathValidatorException")) {
-                        console.warn("Certificate validation failed. This is often due to outdated SHA1 signatures in JARs. You may need to re-sign them.");
-                    } else if (e instanceof Error && e.message.includes("joptsimple.OptionParser")) {
-                        console.warn("jopt-simple library missing. Ensure 'jopt-simple-4.5.jar' is in your /client/ directory and listed in the classpath.");
-                    }
-                }
-            }
-
-            if (!success) {
-                console.error("All launch attempts failed to start Minecraft via LaunchWrapper.");
-                alert(`Failed to start Minecraft after multiple attempts. Last error: ${lastError ? lastError.message : "Unknown error"}. Please check the browser console for more details.`);
             }
         });
     </script>
