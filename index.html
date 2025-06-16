@@ -9,22 +9,22 @@
         body, html {
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Hides scrollbars if content is slightly larger than viewport */
+            overflow: hidden;
             width: 100%;
             height: 100%;
-            background-color: #000; /* Sets background to black before the game loads */
+            background-color: #000;
         }
         #game-container {
-            width: 100vw; /* Occupy full viewport width */
-            height: 100vh; /* Occupy full viewport height */
-            display: flex; /* Use flexbox for centering */
-            justify-content: center; /* Center horizontally */
-            align-items: center; /* Center vertically */
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         canvas {
-            display: block; /* Ensures the canvas fills its container and avoids extra space below */
-            width: 100%; /* Make canvas fill its container */
-            height: 100%; /* Make canvas fill its container */
+            display: block;
+            width: 100%;
+            height: 100%;
         }
     </style>
     <script src="https://cjrtnc.leaningtech.com/4.0/loader.js"></script>
@@ -43,23 +43,20 @@
 
             // Initialize CheerPJ with debugging enabled and necessary Java properties.
             await cheerpjInit({
-                enableDebug: true, // Keep this on for troubleshooting! It provides verbose console output.
-                // Set the java.library.path to where CheerpJ will mount your client/ directory.
-                // This tells the Java application where to look for native libraries (like those from LWJGL).
+                enableDebug: true,
                 javaProperties: ["java.library.path=/app/client"] 
             });
 
-            // Define the classpath for Minecraft and all its dependencies.
-            // REMOVED: client/lwjgl_util_applet.jar.pack.lzma
+            // Define the classpath for Minecraft and all its dependencies, with specific loading order.
             const classPath = [
-                "/app/client/minecraft.jar",           // Contains the com.mojang.minecraft.Minecraft main class
-                "/app/client/lwjgl.jar.pack.lzma",     // Core LWJGL JAR
-                "/app/client/jinput.jar.pack.lzma",    // JInput for input handling
-                "/app/client/lwjgl_util.jar.pack.lzma",// LWJGL utility JAR
-                "/app/client/res.jar.lzma",            // Resource JAR, if your Minecraft version uses it
-                "/app/client/lzma.jar",                // Required by CheerpJ for .lzma decompression
-                "/app/client/windows_natives.jar.lzma" // The native libraries JAR for Windows
-            ].join(':'); 
+                "/app/client/minecraft.jar",           // 1. Minecraft's main JAR (first to be loaded)
+                "/app/client/lzma.jar",                // 2. LZMA decompressor (essential for other .lzma files)
+                "/app/client/lwjgl.jar.pack.lzma",     // 3. Core LWJGL JAR
+                "/app/client/jinput.jar.pack.lzma",    // 4. JInput for input handling
+                "/app/client/lwjgl_util.jar.pack.lzma",// 5. LWJGL utility JAR
+                "/app/client/res.jar.lzma",            // 6. Resource JAR, if your Minecraft version uses it
+                "/app/client/windows_natives.jar.lzma" // 7. The native libraries JAR for Windows
+            ].join(':'); // JARs in the classpath are separated by a colon (':').
 
             console.log("Attempting to start Minecraft main class...");
             
