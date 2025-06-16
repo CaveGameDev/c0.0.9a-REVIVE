@@ -55,15 +55,16 @@
             });
 
             // Define the classpath for Minecraft and all its dependencies.
-            // Critical Order: minecraft.jar -> lzma.jar -> natives JAR -> LWJGL JARs.
+            // NOW LOADING REGULAR .JAR FILES, bypassing .LZMA decompression.
+            // IMPORTANT: Ensure these .jar files are uploaded to your /client/ directory!
             const classPath = [
                 "/app/client/minecraft.jar",           // THIS IS THE MAIN GAME JAR (contains com.mojang.minecraft.Minecraft)
-                "/app/client/lzma.jar",                // Required by CheerpJ for .lzma decompression
-                "/app/client/windows_natives.jar.lzma",// **MOVED**: LWJGL Native libraries (load BEFORE lwjgl.jar)
-                "/app/client/lwjgl.jar.pack.lzma",     // Core LWJGL JAR
-                "/app/client/jinput.jar.pack.lzma",    // JInput for input handling
-                "/app/client/lwjgl_util.jar.pack.lzma",// LWJGL utility JAR
-                "/app/client/res.jar.lzma"             // Resource JAR, if your Minecraft version uses it
+                // Removed lzma.jar as we're no longer using .lzma compressed files
+                "/app/client/windows_natives.jar",     // LWJGL Native libraries (load BEFORE lwjgl.jar)
+                "/app/client/lwjgl.jar",               // Core LWJGL JAR
+                "/app/client/jinput.jar",              // JInput for input handling
+                // REMOVED: lwjgl_util.jar as requested.
+                "/app/client/res.jar"                  // Resource JAR, if your Minecraft version uses it
             ].join(':'); 
 
             console.log("CheerpJ runtime initialized. Attempting to start Minecraft...");
@@ -80,16 +81,12 @@
                 },
                 { 
                     name: "Attempt 3: Width/Height with Username & Session ID", 
-                    // Session ID is often needed for offline mode in some versions. Can be any unique string.
                     args: ["DefaultPlayer", "-sessionid", "CJP_Session12345", "-width", "854", "-height", "480"] 
                 },
                 { 
                     name: "Attempt 4: Fullscreen with Username & Session ID", 
-                    // Some versions might prefer fullscreen. This combines the most common arguments.
                     args: ["DefaultPlayer", "-sessionid", "CJP_Session12345", "-fullscreen"] 
                 }
-                // Add more specific argument sets here if you learn more about your Minecraft version's needs:
-                // { name: "Attempt 5: Custom Game Directory", args: ["--gameDir", "/app/minecraft_data", "-width", "854", "-height", "480"] }
             ];
 
             let success = false;
@@ -100,7 +97,6 @@
                 console.log(`\n--- ${attempt.name} (${i + 1}/${launchAttempts.length}) ---`);
                 
                 try {
-                    // Execute the main class, 'com.mojang.minecraft.Minecraft', from the loaded JARs.
                     const exitCode = await cheerpjRunMain(
                         "com.mojang.minecraft.Minecraft", 
                         classPath,
@@ -108,18 +104,17 @@
                     );
                     console.log(`Minecraft exited with code: ${exitCode}`);
                     success = true;
-                    break; // Exit loop if successful
+                    break; 
                 } catch (e) {
                     console.error(`Attempt ${i + 1} failed:`, e);
                     lastError = e;
-                    // If it's a ClassNotFoundException for the main class, it's a critical path issue
-                    // which might not be resolved by different args, but we'll still try other args.
                     if (e instanceof Error && e.message.includes("com.mojang.minecraft.Minecraft")) {
-                        console.warn("Main Minecraft class not found. Check classpath and file integrity.");
+                        console.warn("Main Minecraft class not found. This indicates a critical classpath or file integrity issue.");
                     } else if (e instanceof Error && e.message.includes("LWJGLException")) {
-                        console.warn("LWJGL error encountered. Check native JARs and java.library.path.");
+                        console.warn("LWJGL error encountered. Ensure LWJGL JARs and native libraries are correct and loaded.");
+                    } else if (e instanceof Error && e.message.includes("error in opening zip file")) {
+                        console.warn("Error opening JAR file. This often means the JAR is corrupted or incomplete.");
                     }
-                    // Continue to next attempt
                 }
             }
 
