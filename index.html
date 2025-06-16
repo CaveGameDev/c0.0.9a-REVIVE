@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <title>Minecraft Applet</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applet</title>
     <style>
         /* Essential styles for fullscreen applet */
         body, html {
@@ -11,7 +12,7 @@
             overflow: hidden; /* Hides scrollbars if applet is slightly larger than viewport */
             width: 100%;
             height: 100%;
-            background-color: black; /* Sets background to black before applet loads */
+            background-color: #000; /* Sets background to black before applet loads, using shorthand hex */
         }
         #applet-container {
             width: 100vw; /* Viewport width */
@@ -20,40 +21,46 @@
             justify-content: center;
             align-items: center;
         }
-        applet {
-            width: 100%;
-            height: 100%;
-            display: block; /* Ensures the applet fills its container */
-        }
+        /* No specific styles needed for <cheerpj-applet> if it's handled by its container */
     </style>
-	    <script src="https://cjrtnc.leaningtech.com/4.0/loader.js"></script>
+    <script src="https://cjrtnc.leaningtech.com/4.0/loader.js"></script>
 </head>
 <body>
 
-  <cheerpj-applet code="org.lwjgl.util.applet.AppletLoader" archive="client/lwjgl_util_applet.jar, client/lzma.jar" codebase="https://009-alpha-test.netlify.app/" width="854" height="480">
-  
-    <param name="al_title" value="Minecraft">
-    <param name="al_main" value="com.mojang.minecraft.MinecraftApplet">
-    <param name="al_logo" value="client/logo_small.png">
-    <param name="al_progressbar" value="appletprogress.gif">
-
-    <param name="al_jars" value="client/lwjgl_applet.jar.pack.lzma, client/lwjgl.jar.pack.lzma, client/jinput.jar.pack.lzma, client/lwjgl_util.jar.pack.lzma, client/res.jar.lzma, client/minecraft.jar">
-    <param name="al_windows" value="client/windows_natives.jar.lzma">
-
-  	<param name="al_version" value="5.17">  
-
-    <param name="separate_jvm" value="true">    
-	<param name="java_arguments" value="-Dsun.java2d.noddraw=true -Dsun.awt.noerasebackground=true -Dsun.java2d.d3d=false -Dsun.java2d.opengl=false -Dsun.java2d.pmoffscreen=false">
-    
-    <param name="al_bgcolor" value="000000">
-    <param name="al_fgcolor" value="ffffff">
-    <param name="al_errorcolor" value="ff0000">
-    <param name="al_prepend_host" value="true">
+    <div id="applet-container">
+        <cheerpj-applet
+            code="org.lwjgl.util.applet.AppletLoader"
+            archive="client/lwjgl_util_applet.jar, client/lzma.jar"
+            codebase="https://009-alpha-test.netlify.app/"
+            width="854"
+            height="480"
+        >
+            <param name="al_title" value="Minecraft">
+            <param name="al_main" value="com.mojang.minecraft.MinecraftApplet">
+            <param name="al_logo" value="client/logo_small.png">
+            <param name="al_progressbar" value="appletprogress.gif">
+            <param name="al_jars" value="client/lwjgl_applet.jar.pack.lzma, client/lwjgl.jar.pack.lzma, client/jinput.jar.pack.lzma, client/lwjgl_util.jar.pack.lzma, client/res.jar.lzma, client/minecraft.jar">
+            <param name="al_windows" value="client/windows_natives.jar.lzma">
+            <param name="al_version" value="5.17">
+            <param name="separate_jvm" value="true">
+            <param name="java_arguments" value="-Dsun.java2d.noddraw=true -Dsun.awt.noerasebackground=true -Dsun.java2d.d3d=false -Dsun.java2d.opengl=false -Dsun.java2d.pmoffscreen=false">
+            <param name="al_bgcolor" value="000000">
+            <param name="al_fgcolor" value="ffffff">
+            <param name="al_errorcolor" value="ff0000">
+            <param name="al_prepend_host" value="true">
         </cheerpj-applet>
-		<script type="module">
-		await cheerpjInit();
-		</script>
-</div>
+    </div>
+
+    <script type="module">
+        // Ensure cheerpjInit() is called after the DOM is ready, though CheerPJ often handles this.
+        // Wrapping it in a DOMContentLoaded listener is good practice for general scripts,
+        // but for CheerPJ, placing it just before </body> is often sufficient if the <cheerpj-applet>
+        // is already in the DOM.
+        document.addEventListener('DOMContentLoaded', async () => {
+            await cheerpjInit();
+            console.log('CheerPJ initialized.');
+        });
+    </script>
 
 </body>
 </html>
