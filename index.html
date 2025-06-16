@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft (CheerPJ) - LaunchWrapper Main + Game Policy</title>
+    <title>Minecraft (CheerPJ) - LaunchWrapper + JOpt Simple</title>
     <style>
         /* Essential styles for fullscreen rendering */
         body, html {
@@ -47,29 +47,26 @@
                     "sun.awt.noerasebackground=true",
                     "sun.java2d.d3d=false",
                     "sun.java2d.opengl=false",
-                    // *** NEW: Add the game.policy as a Java system property ***
                     "-Djava.security.policy=/app/client/game.policy" 
                 ] 
             });
 
             // Define the classpath for Minecraft and all its dependencies.
-            // LaunchWrapper is now the main entry point and its JAR is prioritized.
+            // NOW INCLUDING JOPT-SIMPLE-4.5.JAR
             // IMPORTANT: Ensure all listed .jar files are uploaded to your /client/ directory
             // and are not corrupted!
             const classPath = [
-                "/app/client/launchwrapper.jar",       // Prioritized: LaunchWrapper JAR - MUST BE PRESENT!
-                "/app/client/minecraft.jar",           // Core Minecraft JAR (contains AlphaVanillaTweaker?)
-                "/app/client/windows_natives.jar",     // LWJGL Native libraries
-                "/app/client/lwjgl.jar",               // Core LWJGL JAR
-                "/app/client/jinput.jar",              // JInput for input handling
-                "/app/client/res.jar"                  // Resource JAR, if used
+                "/app/client/launchwrapper.jar",       
+                "/app/client/jopt-simple-4.5.jar",     // <-- NEW: Added jopt-simple-4.5.jar here
+                "/app/client/minecraft.jar",           
+                "/app/client/windows_natives.jar",     
+                "/app/client/lwjgl.jar",               
+                "/app/client/jinput.jar",              
+                "/app/client/res.jar"                  
             ].join(':'); 
 
             console.log("CheerPJ runtime initialized. Attempting to start Minecraft via LaunchWrapper...");
             
-            // Define different sets of command-line arguments to try
-            // Main class is 'net.minecraft.launchwrapper.Launch'
-            // Tweak class 'AlphaVanillaTweaker' is passed as an argument
             const launchAttempts = [
                 { 
                     name: "Attempt 1: Standard Width/Height (with Tweaker)", 
@@ -97,9 +94,8 @@
                 console.log(`\n--- ${attempt.name} (${i + 1}/${launchAttempts.length}) ---`);
                 
                 try {
-                    // Execute the main class, 'net.minecraft.launchwrapper.Launch', from the loaded JARs.
                     const exitCode = await cheerpjRunMain(
-                        "net.minecraft.launchwrapper.Launch", // Main class is now LaunchWrapper
+                        "net.minecraft.launchwrapper.Launch", 
                         classPath,
                         ...attempt.args
                     );
@@ -119,6 +115,8 @@
                         console.warn("LWJGL error encountered. Ensure LWJGL JARs and native libraries are correct and loaded.");
                     } else if (e instanceof Error && e.message.includes("CertPathValidatorException")) {
                         console.warn("Certificate validation failed. This is often due to outdated SHA1 signatures in JARs. You may need to re-sign them.");
+                    } else if (e instanceof Error && e.message.includes("joptsimple.OptionParser")) {
+                        console.warn("jopt-simple library missing. Ensure 'jopt-simple-4.5.jar' is in your /client/ directory and listed in the classpath.");
                     }
                 }
             }
