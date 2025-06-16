@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft (CheerPJ) - LaunchWrapper Main</title>
+    <title>Minecraft (CheerPJ) - LaunchWrapper Main + Game Policy</title>
     <style>
         /* Essential styles for fullscreen rendering */
         body, html {
@@ -46,7 +46,9 @@
                     "sun.java2d.nodraw=true",
                     "sun.awt.noerasebackground=true",
                     "sun.java2d.d3d=false",
-                    "sun.java2d.opengl=false"
+                    "sun.java2d.opengl=false",
+                    // *** NEW: Add the game.policy as a Java system property ***
+                    "-Djava.security.policy=/app/client/game.policy" 
                 ] 
             });
 
@@ -55,8 +57,7 @@
             // IMPORTANT: Ensure all listed .jar files are uploaded to your /client/ directory
             // and are not corrupted!
             const classPath = [
-                // LaunchWrapper.jar must be available before Minecraft.jar
-                "/app/client/launchwrapper.jar",       // **PRIORITIZED**: LaunchWrapper JAR - MUST BE PRESENT!
+                "/app/client/launchwrapper.jar",       // Prioritized: LaunchWrapper JAR - MUST BE PRESENT!
                 "/app/client/minecraft.jar",           // Core Minecraft JAR (contains AlphaVanillaTweaker?)
                 "/app/client/windows_natives.jar",     // LWJGL Native libraries
                 "/app/client/lwjgl.jar",               // Core LWJGL JAR
@@ -116,6 +117,8 @@
                         console.warn("Error opening JAR file. This often means the JAR is corrupted or incomplete. Check all JARs.");
                     } else if (e instanceof Error && e.message.includes("LWJGLException")) {
                         console.warn("LWJGL error encountered. Ensure LWJGL JARs and native libraries are correct and loaded.");
+                    } else if (e instanceof Error && e.message.includes("CertPathValidatorException")) {
+                        console.warn("Certificate validation failed. This is often due to outdated SHA1 signatures in JARs. You may need to re-sign them.");
                     }
                 }
             }
