@@ -11,11 +11,11 @@
             display: block; /* Centers the applet */
         }
     </style>
-</head>
+    </head>
 <body>
 
     <div id="applet_container">
-        <applet code="com.mojang.minecraft.MinecraftApplet"
+        <applet code="com.mojang.minecraft.Minecraft"
                 archive="client/minecraft.jar, client/lwjgl.jar, client/jinput.jar, client/res.jar, client/windows_natives.jar"
                 width="854" height="480" id="MinecraftApplet">
 
@@ -29,6 +29,17 @@
             <param name="sun.java2d.d3d" value="false">
             <param name="sun.java2d.opengl" value="false">
 
+            <param name="cheerpj.debug" value="true">
+            <param name="cheerpj.java_home" value="./client"> 
+            <param name="cheerpj.heap_size" value="512M">
+            <param name="cheerpj.library_path" value="client/natives"> 
+            <param name="cheerpj.policy_file" value="client/game.policy">
+            <param name="cheerpj.wasmModules" value="client/gl4es.wasm">
+
+            <param name="cheerpj.mountFS" value="{ '/': 'idbfs' }">
+            <param name="cheerpj.console" value="log">
+            <param name="cheerpj.enableDownloadCallback" value="true">
+
             <param name="gameDir" value="./client">
             <param name="assetsDir" value="./client/assets">
             <param name="username" value="Player">
@@ -38,5 +49,16 @@
         </applet>
     </div>
 
-    </body>
+    <script>
+        // Optional: Listen for CheerpJ's loading progress (the extension might still trigger this)
+        if (window.cheerpj) {
+            cheerpj.enableDownloadCallback(function(url, loaded, total) {
+                const progress = total ? Math.round((loaded / total) * 100) : 0;
+                console.log(`Loading ${url}: ${progress}% (${loaded}/${total})`);
+                // You could update a progress bar here
+            });
+        }
+    </script>
+
+</body>
 </html>
