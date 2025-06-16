@@ -3,25 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Applet</title>
+    <title>Minecraft Applet</title>
     <style>
-        /* Essential styles for fullscreen applet */
         body, html {
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Hides scrollbars if applet is slightly larger than viewport */
+            overflow: hidden;
             width: 100%;
             height: 100%;
-            background-color: #000; /* Sets background to black before applet loads, using shorthand hex */
+            background-color: #000;
         }
         #applet-container {
-            width: 100vw; /* Viewport width */
-            height: 100vh; /* Viewport height */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        /* No specific styles needed for <cheerpj-applet> if it's handled by its container */
     </style>
     <script src="https://cjrtnc.leaningtech.com/4.0/loader.js"></script>
 </head>
@@ -39,8 +37,11 @@
             <param name="al_main" value="com.mojang.minecraft.MinecraftApplet">
             <param name="al_logo" value="client/logo_small.png">
             <param name="al_progressbar" value="appletprogress.gif">
-            <param name="al_jars" value="client/windows_natives.jar.lzma, client/lwjgl_applet.jar.pack.lzma, client/lwjgl.jar.pack.lzma, client/jinput.jar.pack.lzma, client/lwjgl_util.jar.pack.lzma, client/res.jar.lzma, client/minecraft.jar">
-            <param name="al_windows" value="client/windows_natives.jar">
+
+            <param name="al_jars" value="client/lwjgl_applet.jar.pack.lzma, client/lwjgl.jar.pack.lzma, client/jinput.jar.pack.lzma, client/lwjgl_util.jar.pack.lzma, client/res.jar.lzma, client/minecraft.jar">
+            
+            <param name="al_windows" value="windows_natives.jar.lzma"> 
+            
             <param name="al_version" value="5.17">
             <param name="separate_jvm" value="true">
             <param name="java_arguments" value="-Dsun.java2d.noddraw=true -Dsun.awt.noerasebackground=true -Dsun.java2d.d3d=false -Dsun.java2d.opengl=false -Dsun.java2d.pmoffscreen=false">
@@ -52,12 +53,21 @@
     </div>
 
     <script type="module">
-        // Ensure cheerpjInit() is called after the DOM is ready, though CheerPJ often handles this.
-        // Wrapping it in a DOMContentLoaded listener is good practice for general scripts,
-        // but for CheerPJ, placing it just before </body> is often sufficient if the <cheerpj-applet>
-        // is already in the DOM.
         document.addEventListener('DOMContentLoaded', async () => {
-            await cheerpjInit();
+            await cheerpjInit({
+                enableDebug: true, // Keep debug mode on
+                // Force CheerpJ to load this specific JAR and make it available
+                paths: {
+                    '/app/windows_natives.jar.lzma': 'client/windows_natives.jar.lzma' 
+                    // This maps the server path 'client/windows_natives.jar.lzma'
+                    // to the CheerpJ virtual file system path '/app/windows_natives.jar.lzma'
+                },
+                // If the applet needs to know about java.library.path, you might add it here.
+                // However, CheerPJ's JNI bridge often handles this automatically for known libraries like LWJGL.
+                // javaProperties: {
+                //     'java.library.path': '/app/' // Points to the root of our mounted files
+                // }
+            });
             console.log('CheerPJ initialized.');
         });
     </script>
