@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Minecraft Alpha Test</title>
+        <title>Your Minecraft (c0.0.9a)</title>
         <script src="https://cjrtnc.leaningtech.com/3_20250430_1221/loader.js"></script>
         
         <style>
@@ -65,7 +65,7 @@
     </head>
     <body>
         <header>
-            <h1>Minecraft Alpha Test</h1>
+            <h1>Your Minecraft (c0.0.9a)</h1>
         </header>
         <main>
             <div class="desktop-only">
@@ -181,7 +181,7 @@
                 await cheerpjInit({
                     version: 8, 
                     javaProperties: [
-                        "java.library.path=/app/client/natives/", // Native libraries now explicitly looked for at virtual /app/client/natives/
+                        "java.library.path=/app/client/natives/", // Native libraries explicitly looked for at virtual /app/client/natives/
                         "java.awt.headless=false",
                         "cheerpj.dom.async=true",
                         "cheerpj.x11.display=true",
@@ -192,7 +192,13 @@
                         "org.lwjgl.Sys.debug=true",
                     ],
                     libraries: {
-                        "libGL.so.1": "/app/client/natives/gl4es.wasm" // OpenGL now explicitly mapped from virtual /app/client/natives/
+                        "libGL.so.1": "/app/client/natives/gl4es.wasm", // OpenGL mapped from natives
+                        "liblwjgl.so": "/app/client/natives/liblwjgl.so", // LWJGL 32-bit native
+                        "liblwjgl64.so": "/app/client/natives/liblwjgl64.so", // LWJGL 64-bit native (if used)
+                        "libjinput-linux.so": "/app/client/natives/libjinput-linux.so", // JInput 32-bit Linux native
+                        "libjinput-linux64.so": "/app/client/natives/libjinput-linux64.so", // JInput 64-bit Linux native
+                        "libopenal.so": "/app/client/natives/libopenal.so", // OpenAL 32-bit native
+                        "libopenal64.so": "/app/client/natives/libopenal64.so" // OpenAL 64-bit native
                     },
                     enableX11: true,
                     preloadResources: {
