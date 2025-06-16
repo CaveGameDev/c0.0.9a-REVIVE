@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft (CheerPJ)</title>
+    <title>Minecraft (CheerPJ) - LaunchWrapper Main</title>
     <style>
         /* Essential styles for fullscreen rendering */
         body, html {
@@ -36,15 +36,11 @@
     </div>
 
     <script type="module">
-        // Ensure the DOM is fully loaded before trying to access elements or initialize CheerPJ.
         document.addEventListener('DOMContentLoaded', async () => {
-            // Tell LWJGL (through CheerPJ) which HTML canvas element to use for rendering.
             window.lwjglCanvasElement = document.getElementById('minecraft-canvas');
 
-            // Initialize CheerPJ with debugging enabled and necessary Java properties.
             await cheerpjInit({
                 enableDebug: true,
-                // These are Java System Properties, passed to the JVM itself.
                 javaProperties: [
                     "java.library.path=/app/client", // Path where native libs are extracted by CheerpJ
                     "sun.java2d.nodraw=true",
@@ -55,37 +51,40 @@
             });
 
             // Define the classpath for Minecraft and all its dependencies.
-            // NOW LOADING REGULAR .JAR FILES, bypassing .LZMA decompression.
-            // IMPORTANT: Ensure these .jar files are uploaded to your /client/ directory!
+            // LaunchWrapper is now the main entry point and its JAR is prioritized.
+            // IMPORTANT: Ensure all listed .jar files are uploaded to your /client/ directory
+            // and are not corrupted!
             const classPath = [
-                "/app/client/minecraft.jar",           // THIS IS THE MAIN GAME JAR (contains com.mojang.minecraft.Minecraft)
-                // Removed lzma.jar as we're no longer using .lzma compressed files
-                "/app/client/windows_natives.jar",     // LWJGL Native libraries (load BEFORE lwjgl.jar)
+                // LaunchWrapper.jar must be available before Minecraft.jar
+                "/app/client/launchwrapper.jar",       // **PRIORITIZED**: LaunchWrapper JAR - MUST BE PRESENT!
+                "/app/client/minecraft.jar",           // Core Minecraft JAR (contains AlphaVanillaTweaker?)
+                "/app/client/windows_natives.jar",     // LWJGL Native libraries
                 "/app/client/lwjgl.jar",               // Core LWJGL JAR
                 "/app/client/jinput.jar",              // JInput for input handling
-                // REMOVED: lwjgl_util.jar as requested.
-                "/app/client/res.jar"                  // Resource JAR, if your Minecraft version uses it
+                "/app/client/res.jar"                  // Resource JAR, if used
             ].join(':'); 
 
-            console.log("CheerpJ runtime initialized. Attempting to start Minecraft...");
+            console.log("CheerPJ runtime initialized. Attempting to start Minecraft via LaunchWrapper...");
             
             // Define different sets of command-line arguments to try
+            // Main class is 'net.minecraft.launchwrapper.Launch'
+            // Tweak class 'AlphaVanillaTweaker' is passed as an argument
             const launchAttempts = [
                 { 
-                    name: "Attempt 1: Standard Width/Height", 
-                    args: ["-width", "854", "-height", "480"] 
+                    name: "Attempt 1: Standard Width/Height (with Tweaker)", 
+                    args: ["--tweakClass", "AlphaVanillaTweaker", "-width", "854", "-height", "480"] 
                 },
                 { 
-                    name: "Attempt 2: Width/Height with Default Username (e.g., for offline play)", 
-                    args: ["DefaultPlayer", "-width", "854", "-height", "480"] 
+                    name: "Attempt 2: Width/Height with Default Username (with Tweaker)", 
+                    args: ["--tweakClass", "AlphaVanillaTweaker", "DefaultPlayer", "-width", "854", "-height", "480"] 
                 },
                 { 
-                    name: "Attempt 3: Width/Height with Username & Session ID", 
-                    args: ["DefaultPlayer", "-sessionid", "CJP_Session12345", "-width", "854", "-height", "480"] 
+                    name: "Attempt 3: Width/Height with Username & Session ID (with Tweaker)", 
+                    args: ["--tweakClass", "AlphaVanillaTweaker", "DefaultPlayer", "-sessionid", "CJP_Session12345", "-width", "854", "-height", "480"] 
                 },
                 { 
-                    name: "Attempt 4: Fullscreen with Username & Session ID", 
-                    args: ["DefaultPlayer", "-sessionid", "CJP_Session12345", "-fullscreen"] 
+                    name: "Attempt 4: Fullscreen with Username & Session ID (with Tweaker)", 
+                    args: ["--tweakClass", "AlphaVanillaTweaker", "DefaultPlayer", "-sessionid", "CJP_Session12345", "-fullscreen"] 
                 }
             ];
 
@@ -97,29 +96,32 @@
                 console.log(`\n--- ${attempt.name} (${i + 1}/${launchAttempts.length}) ---`);
                 
                 try {
+                    // Execute the main class, 'net.minecraft.launchwrapper.Launch', from the loaded JARs.
                     const exitCode = await cheerpjRunMain(
-                        "com.mojang.minecraft.Minecraft", 
+                        "net.minecraft.launchwrapper.Launch", // Main class is now LaunchWrapper
                         classPath,
                         ...attempt.args
                     );
-                    console.log(`Minecraft exited with code: ${exitCode}`);
+                    console.log(`Minecraft (LaunchWrapper) exited with code: ${exitCode}`);
                     success = true;
                     break; 
                 } catch (e) {
                     console.error(`Attempt ${i + 1} failed:`, e);
                     lastError = e;
-                    if (e instanceof Error && e.message.includes("com.mojang.minecraft.Minecraft")) {
-                        console.warn("Main Minecraft class not found. This indicates a critical classpath or file integrity issue.");
+                    if (e instanceof Error && e.message.includes("net.minecraft.launchwrapper.Launch")) {
+                        console.warn("LaunchWrapper main class not found. Ensure 'launchwrapper.jar' is present and correct.");
+                    } else if (e instanceof Error && e.message.includes("AlphaVanillaTweaker")) {
+                         console.warn("AlphaVanillaTweaker not found or failed. Ensure it's in minecraft.jar or another loaded JAR.");
+                    } else if (e instanceof Error && e.message.includes("error in opening zip file")) {
+                        console.warn("Error opening JAR file. This often means the JAR is corrupted or incomplete. Check all JARs.");
                     } else if (e instanceof Error && e.message.includes("LWJGLException")) {
                         console.warn("LWJGL error encountered. Ensure LWJGL JARs and native libraries are correct and loaded.");
-                    } else if (e instanceof Error && e.message.includes("error in opening zip file")) {
-                        console.warn("Error opening JAR file. This often means the JAR is corrupted or incomplete.");
                     }
                 }
             }
 
             if (!success) {
-                console.error("All launch attempts failed to start Minecraft.");
+                console.error("All launch attempts failed to start Minecraft via LaunchWrapper.");
                 alert(`Failed to start Minecraft after multiple attempts. Last error: ${lastError ? lastError.message : "Unknown error"}. Please check the browser console for more details.`);
             }
         });
