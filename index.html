@@ -1,83 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft (CheerPJ) - Classic Attempt</title>
+    <title>Minecraft 0.0.9a Applet</title>
     <style>
-        /* Essential styles for fullscreen rendering */
-        body, html {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-        }
-        #game-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        #applet_container {
+            width: 854px; /* Match your desired width */
+            height: 480px; /* Match your desired height */
+            margin: auto;
+            display: block; /* Centers the applet */
         }
     </style>
-    <script src="https://cjrtnc.leaningtech.com/3.1/loader.js"></script>
+    <script src="https://cheerpj.com/java-2.9.3/java.js"></script>
 </head>
 <body>
 
-    <div id="game-container">
-        <canvas id="minecraft-canvas"></canvas> 
+    <div id="applet_container">
+        <applet code="com.mojang.minecraft.MinecraftApplet"
+                archive="client/minecraft.jar, client/lwjgl.jar, client/jinput.jar, client/res.jar, client/windows_natives.jar"
+                width="854" height="480" id="MinecraftApplet">
+
+            <param name="separate_jvm" value="true">
+
+            <param name="java_arguments" value="-Xmx512M -Xms256M">
+            <param name="java.library.path" value="client/natives">
+            <param name="java.security.policy" value="client/game.policy">
+            <param name="sun.java2d.nodraw" value="true">
+            <param name="sun.awt.noerasebackground" value="true">
+            <param name="sun.java2d.d3d=false" value="false">
+            <param name="sun.java2d.opengl=false" value="false">
+
+            <param name="cheerpj.debug" value="true"> <param name="cheerpj.java_home" value="./client/cheerpj_runtime"> 
+            <param name="cheerpj.heap_size" value="512M"> <param name="cheerpj.library_path" value="client/natives"> <param name="cheerpj.policy_file" value="client/game.policy"> <param name="cheerpj.wasmModules" value="client/cheerpj_runtime/gl4es.wasm">
+
+            <param name="cheerpj.mountFS" value="{ '/': 'idbfs' }"> <param name="cheerpj.console" value="log"> <param name="cheerpj.enableDownloadCallback" value="true"> <param name="gameDir" value="./client">
+            <param name="assetsDir" value="./client/assets">
+            <param name="username" value="Player">
+            <param name="session" value="0">
+
+            Your browser does not support Java applets.
+        </applet>
     </div>
 
-    <script type="module">
-        document.addEventListener('DOMContentLoaded', async () => {
-            window.lwjglCanvasElement = document.getElementById('minecraft-canvas');
-
-            await cheerpjInit({
-                enableDebug: true, // Keep debug enabled for now for easier troubleshooting
-                javaProperties: [
-                    "java.library.path=/app/client", // Path where native libs are extracted by CheerpJ
-                    "sun.java2d.nodraw=true",
-                    "sun.awt.noerasebackground=true",
-                    "sun.java2d.d3d=false",
-                    "sun.java2d.opengl=false",
-                    "-Djava.security.policy=/app/client/game.policy" 
-                ] 
+    <script>
+        // Optional: Listen for CheerpJ's loading progress
+        if (window.cheerpj) {
+            cheerpj.enableDownloadCallback(function(url, loaded, total) {
+                const progress = total ? Math.round((loaded / total) * 100) : 0;
+                console.log(`Loading ${url}: ${progress}% (${loaded}/${total})`);
+                // You could update a progress bar here
             });
-
-            // Define the classpath for Minecraft and all its dependencies.
-            // THIS LINE IS CHANGED TO USE 'minecraft.jar'
-            const classPath = [
-                "/app/client/minecraft.jar", // <--- CHANGED FROM my_classic_minecraft.jar
-                "/app/client/windows_natives.jar",       
-                "/app/client/lwjgl.jar",                 
-                "/app/client/jinput.jar",                                 
-            ].join(':'); 
-
-            console.log("CheerPJ runtime initialized. Attempting to start classic Minecraft directly...");
-            
-            try {
-                const exitCode = await cheerpjRunMain(
-                    "com.mojang.minecraft.Minecraft", // Direct main class for very old Minecraft
-                    classPath,
-                );
-                console.log(`Minecraft exited with code: ${exitCode}`);
-            } catch (e) {
-                console.error("Failed to start Minecraft directly:", e);
-                alert(`Failed to start Minecraft. Please check the browser console for more details.`);
-                if (e instanceof Error && e.message.includes("ClassNotFoundException")) {
-                    console.warn("A class was not found. Check your classPath for missing or incorrectly named JARs.");
-                } else if (e instanceof Error && e.message.includes("NoSuchMethodError")) {
-                    console.warn("Method not found. Might be a version incompatibility between Java libraries.");
-                }
-            }
-        });
+        }
     </script>
 
 </body>
