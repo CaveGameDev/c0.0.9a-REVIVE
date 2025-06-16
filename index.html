@@ -1,137 +1,223 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Minecraft (c0.0.9a) - Direct CheerpJ 4.1 Launch</title>
-    <style>
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            background-color: black; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            font-family: sans-serif;
-            color: white;
-        }
-        #gameCanvas {
-            width: 854px; 
-            height: 480px;
-            display: block; 
-            background-color: black; 
-        }
-        .loading-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        progress {
-            width: 80%;
-            height: 25px;
-            margin-top: 20px;
-        }
-    </style>
-    <script src="https://cjrtnc.leaningtech.com/4.1/loader.js"></script>
-</head>
-<body>
+<html lang="en" style="width:100%;height:100%;">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Your Minecraft (c0.0.9a)</title>
+        <script src="https://cjrtnc.leaningtech.com/3_20250430_1221/loader.js"></script>
+        
+        <style>
+            html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                overflow: hidden; /* Prevent scrollbars */
+                font-family: sans-serif;
+                background-color: black;
+                color: white;
+            }
+            header {
+                text-align: center;
+                padding: 10px;
+                background-color: #333;
+                color: white;
+            }
+            .container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: calc(100vh - 60px); /* Adjust based on header height */
+                gap: 20px;
+            }
+            .intro {
+                text-align: center;
+                padding: 20px;
+            }
+            .display {
+                width: 854px; /* Default resolution for CheerpJ display */
+                height: 480px;
+                background-color: black;
+                border: 1px solid #555;
+                display: none; /* Hidden by default until game starts */
+            }
+            progress {
+                width: 80%;
+                max-width: 500px;
+                height: 25px;
+                margin-top: 20px;
+                display: none; /* Hidden by default */
+            }
+            button {
+                padding: 15px 30px;
+                font-size: 1.2em;
+                cursor: pointer;
+            }
+            .disclaimer {
+                font-size: 0.8em;
+                margin-top: 10px;
+                color: #aaa;
+            }
+            .desktop-only {
+                display: block; 
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Your Minecraft (c0.0.9a)</h1>
+        </header>
+        <main>
+            <div class="desktop-only">
+                <div class="container">
+                    <div class="intro">
+                        <p>This is **Minecraft c0.0.9a** running in the browser using CheerpJ.</p>
+                        <p>
+                            Click the button below to launch the game from your local files.
+                        </p>
+                        <button>Play Minecraft c0.0.9a!</button>
+                        <div class="disclaimer">
+                            This is not an official Minecraft product. It is not approved by or associated with Mojang or Microsoft.
+                        </div>
+                    </div>
+                    <progress></progress>
+                    <div class="display"></div> </div>
+            </div>
+        </main>
 
-    <div id="loading-screen" class="loading-overlay">
-        <h1>Loading Minecraft...</h1>
-        <p id="loading-status">Initializing CheerpJ...</p>
-        <progress id="download-progress" value="0" max="100"></progress>
-    </div>
+        <script type="module">
+            // This helper function is for downloading files, but for c0.0.9a,
+            // we expect `minecraft.jar` to be local, so this specific download isn't used for the main JAR.
+            // It's included as it was part of the Browsercraft example's structure.
+            async function downloadFileToCheerpJ(url, destPath, progressCallback) {
+                const response = await fetch(url);
+                const reader = response.body.getReader();
+                const contentLength = +response.headers.get('Content-Length');
 
-    <canvas id="gameCanvas"></canvas>
+                const bytes = new Uint8Array(contentLength);
+                progressCallback?.(0, contentLength);
 
-    <script type="module">
-        (async () => {
-            const loadingScreen = document.getElementById('loading-screen');
-            const loadingStatus = document.getElementById('loading-status');
-            const downloadProgress = document.getElementById('download-progress');
-
-            // Define all JAR paths as CheerpJ virtual filesystem paths.
-            const minecraftJarPath = "/client/minecraft.jar"; 
-            const lwjglJarPath = "/client/lwjgl.jar";         
-            const lwjglUtilJarPath = "/client/lwjgl_util-2.9.3.jar"; 
-            const jinputJarPath = "/client/jinput.jar";         
-
-            const mainClass = "com.mojang.minecraft.Minecraft";
-            
-            const runtimeClasspath = [
-                minecraftJarPath,
-                lwjglJarPath,
-                lwjglUtilJarPath,
-                jinputJarPath
-            ].join(':');
-
-            const launcherArgs = [];
-
-            // --- 1. Initialize CheerpJ ---
-            loadingStatus.textContent = "Initializing CheerpJ...";
-            await cheerpjInit({
-                version: 8,
-                javaProperties: [
-                    "java.library.path=/client/libraries/",
-                    "java.awt.headless=false",
-                    "cheerpj.dom.async=true",
-                    "cheerpj.x11.display=true",
-                    "sun.java2d.nodraw=true",
-                    "sun.awt.noerasebackground=true",
-                    "sun.java2d.d3d=false",
-                    "sun.java2d.opengl=false",
-                    "org.lwjgl.Sys.debug=true",
-                ],
-                libraries: {
-                    "libGL.so.1": "/client/libraries/gl4es.wasm"
-                },
-                enableX11:true,
-                console: "log",
-                enableDownloadCallback: true, // This enables the callback, but doesn't define it yet
-                mountFS: {
-                    "/client/": "./client/" 
+                let pos = 0;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done)
+                        break;
+                    bytes.set(value, pos);
+                    pos += value.length;
+                    progressCallback?.(pos, contentLength);
                 }
-            });
 
-            console.log("CheerpJ initialized.");
-            loadingStatus.textContent = "CheerpJ initialized. Creating display...";
+                return new Promise((resolve, reject) => {
+                    var fds = [];
+                    cheerpOSOpen(fds, destPath, "w", fd => {
+                        cheerpOSWrite(fds, fd, bytes, 0, bytes.length, w => {
+                            cheerpOSClose(fds, fd, resolve);
+                        });
+                    });
+                });
+            }
 
-            // --- 2. Create the CheerpJ display ---
-            cheerpjCreateDisplay(854, 480);
+            // The MinecraftClient class, adapted for c0.0.9a
+            class MinecraftClient {
+                #progress;
+                #button;
+                #display;
+                #intro;
+                #isRunning;
 
-            // --- 3. Link LWJGL to the HTML canvas element ---
-            window.lwjglCanvasElement = document.getElementById("gameCanvas");
+                constructor() {
+                    this.#button = document.querySelector('button');
+                    // Attach the run method to the button click event
+                    this.#button.addEventListener('click', () => this.run());
 
-            console.log("CheerpJ display created and canvas linked.");
-            loadingStatus.textContent = "Launching Minecraft...";
+                    this.#progress = document.querySelector('progress');
+                    this.#progress.style.display = 'none'; // Initially hidden
 
-            // --- Handle CheerpJ Download Progress (MOVED HERE) ---
-            // NOW that cheerpjInit() has completed, 'cheerpj' is defined and safe to use.
-            cheerpj.enableDownloadCallback(function(url, loaded, total) {
-                if (total > 0) {
-                    const progress = Math.round((loaded / total) * 100);
-                    downloadProgress.value = loaded;
-                    downloadProgress.max = total;
-                    loadingStatus.textContent = `Downloading: ${url.split('/').pop()} - ${progress}%`;
-                } else {
-                    loadingStatus.textContent = `Downloading: ${url.split('/').pop()}`;
+                    this.#intro = document.querySelector('.intro');
+
+                    // CheerpJ will create its canvas inside this display div
+                    this.#display = document.querySelector('.display');
+                    cheerpjCreateDisplay(-1, -1, this.#display); // -1, -1 lets CheerpJ use parent size
+
+                    this.#isRunning = false;
                 }
-            });
 
-            // --- 4. Run the Minecraft application ---
-            await cheerpjRunMain(
-                mainClass,
-                runtimeClasspath,
-                launcherArgs
-            );
+                /** * Runs the Minecraft application.
+                 * @returns {Promise<number>} Exit code 
+                 */
+                async run() {
+                    if (this.#isRunning) {
+                        throw new Error('Already running');
+                    }
+                    this.#isRunning = true; 
 
-            console.log("Minecraft application started.");
-            loadingScreen.style.display = 'none'; 
-        })();
-    </script>
-</body>
+                    this.#intro.style.display = 'none'; // Hide the intro text
+                    this.#progress.style.display = 'none'; // No download progress for local JAR
+                    this.#display.style.display = 'unset'; // Show the area where the game will appear
+                    
+                    // Define the classpath for Minecraft c0.0.9a.
+                    // All JARs are expected to be in CheerpJ's virtual /app/ 
+                    // (which maps to your local `client/` folder).
+                    const runtimeClasspath = [
+                        "/app/minecraft.jar",           // Your c0.0.9a JAR
+                        "/app/lwjgl.jar",
+                        "/app/lwjgl_util-2.9.3.jar",    // Assuming you have this version
+                        "/app/jinput.jar"               // Assuming you have jinput.jar
+                    ].join(':');
+
+                    // Launch Minecraft c0.0.9a with its specific main class
+                    const exitCode = await cheerpjRunMain("com.mojang.minecraft.Minecraft", runtimeClasspath);
+
+                    this.#isRunning = false;
+
+                    return exitCode;
+                }
+
+                /** * Checks if the game is currently running.
+                 * @returns {boolean} 
+                 */
+                get isRunning() {
+                    return this.#isRunning;
+                }
+            }
+
+            // --- CheerpJ Initialization (using CheerpJ 3.x parameters) ---
+            // This async function starts the CheerpJ runtime as soon as the script module loads.
+            (async () => {
+                await cheerpjInit({
+                    version: 8, // Target Java 8 runtime within CheerpJ
+                    javaProperties: [
+                        "java.library.path=/app/libraries/", // CheerpJ looks for native libs here
+                        "java.awt.headless=false",
+                        "cheerpj.dom.async=true",
+                        "cheerpj.x11.display=true",
+                        "sun.java2d.nodraw=true",
+                        "sun.awt.noerasebackground=true",
+                        "sun.java2d.d3d=false",
+                        "sun.java2d.opengl=false",
+                        "org.lwjgl.Sys.debug=true",
+                    ],
+                    libraries: {
+                        "libGL.so.1": "/app/libraries/gl4es.wasm" // Map OpenGL calls to gl4es.wasm
+                    },
+                    enableX11: true,
+                    // Preload resources for CheerpJ's internal Java runtime.
+                    // This large block is for performance and is copied directly from the Browsercraft example.
+                    preloadResources: {
+                        "/lt/8/jre/lib/rt.jar": [0, 131072, 1310720, 1572864, 4456448, 4849664, 5111808, 5505024, 7995392, 8126464, 9699328, 9830400, 9961472, 11534336, 11665408, 12189696, 12320768, 12582912, 13238272, 13369344, 15073280, 15335424, 15466496, 15597568, 15990784, 16121856, 16252928, 16384000, 16777216, 16908288, 17039360, 17563648, 17694720, 17825792, 17956864, 18087936, 18219008, 18612224, 18743296, 18874368, 19005440, 19136512, 19398656, 19791872, 20054016, 20709376, 20840448, 21757952, 21889024, 26869760],
+                        "/lt/etc/users": [0, 131072], "/lt/etc/localtime": [], "/lt/8/jre/lib/cheerpj-awt.jar": [0, 131072], "/lt/8/lib/ext/meta-index": [0, 131072], "/lt/8/lib/ext": [], "/lt/8/lib/ext/index.list": [], "/lt/8/lib/ext/localedata.jar": [], "/lt/8/jre/lib/jsse.jar": [0, 131072, 786432, 917504], "/lt/8/jre/lib/jce.jar": [0, 131072], "/lt/8/jre/lib/charsets.jar": [0, 131072, 1703936, 1835008], "/lt/8/jre/lib/resources.jar": [0, 131072, 917504, 1179648], "/lt/8/jre/lib/javaws.jar": [0, 131072, 1441792, 1703936], "/lt/8/lib/ext/sunjce_provider.jar": [], "/lt/8/lib/security/java.security": [0, 131072], "/lt/8/jre/lib/meta-index": [0, 131072], "/lt/8/jre/lib": [], "/lt/8/lib/accessibility.properties": [], "/lt/8/lib/fonts/LucidaSansRegular.ttf": [], "/lt/8/lib/currency.data": [0, 131072], "/lt/8/lib/currency.properties": [], "/lt/libraries/libGLESv2.so.1": [0, 262144], "/lt/libraries/libEGL.so.1": [0, 262144], "/lt/8/lib/fonts/badfonts.txt": [], "/lt/8/lib/fonts": [], "/lt/etc/hosts": [], "/lt/etc/resolv.conf": [0, 131072], "/lt/8/lib/fonts/fallback": [], "/lt/fc/fonts/fonts.conf": [0, 131072], "/lt/fc/ttf": [], "/lt/fc/cache/e21edda6a7db77f35ca341e0c3cb2a22-le32d8.cache-7": [0, 131072], "/lt/fc/ttf/LiberationSans-Regular.ttf": [0, 131072, 262144, 393216], "/lt/8/lib/jaxp.properties": [], "/lt/etc/timezone": [], "/lt/8/lib/tzdb.dat": [0, 131072]
+                    },
+                    // Map your local './client/' folder to CheerpJ's virtual '/app/'
+                    // This is where CheerpJ will find your minecraft.jar, LWJGL JARs, and libraries folder.
+                    mountFS: {
+                        "/app/": "./client/" 
+                    }
+                });
+                console.log("CheerpJ initialization completed.");
+
+                // Initialize the MinecraftClient which handles button clicks and game launch
+                const mc = new MinecraftClient();
+            })();
+        </script>
+    </body>
 </html>
