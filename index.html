@@ -81,7 +81,8 @@
                         </div>
                     </div>
                     <progress></progress>
-                    <div class="display"></div> </div>
+                    <div class="display"></div>
+                </div>
             </div>
         </main>
 
@@ -191,6 +192,7 @@
                         "sun.java2d.opengl=false",
                         "org.lwjgl.Sys.debug=true",
                     ],
+                    // All native libraries mapped for CheerpJ 3.x
                     libraries: {
                         "libGL.so.1": "/app/client/natives/gl4es.wasm", // OpenGL mapped from natives
                         "liblwjgl.so": "/app/client/natives/liblwjgl.so", // LWJGL 32-bit native
@@ -198,7 +200,9 @@
                         "libjinput-linux.so": "/app/client/natives/libjinput-linux.so", // JInput 32-bit Linux native
                         "libjinput-linux64.so": "/app/client/natives/libjinput-linux64.so", // JInput 64-bit Linux native
                         "libopenal.so": "/app/client/natives/libopenal.so", // OpenAL 32-bit native
-                        "libopenal64.so": "/app/client/natives/libopenal64.so" // OpenAL 64-bit native
+                        "libopenal64.so": "/app/client/natives/libopenal64.so", // OpenAL 64-bit native
+                        // *** ADDED: Mapping for libjawt.so to CheerpJ's internal jawt.js ***
+                        "libjawt.so": "/lt/libraries/jawt.js" 
                     },
                     enableX11: true,
                     preloadResources: {
