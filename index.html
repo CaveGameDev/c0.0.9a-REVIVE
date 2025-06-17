@@ -182,7 +182,8 @@
                 await cheerpjInit({
                     version: 8, 
                     javaProperties: [
-                        // java.library.path is intentionally removed to prevent local lookups
+                        // *** RE-ADDED: java.library.path to potentially satisfy LWJGL's lookup ***
+                        "java.library.path=/app/client/natives/", 
                         "java.awt.headless=false",
                         "cheerpj.dom.async=true",
                         "cheerpj.x11.display=true",
@@ -201,7 +202,7 @@
                         "libjinput-linux64.so": "/app/client/natives/libjinput-linux64.so",
                         "libopenal.so": "/app/client/natives/libopenal.so",
                         "libopenal64.so": "/app/client/natives/libopenal64.so",
-                        // *** CRITICAL CHANGE: Mapping "jawt.js" directly to target the specific 404 ***
+                        // jawt.js mapping kept, as it resolved the previous 404
                         "jawt.js": "/lt/libraries/jawt.js" 
                     },
                     enableX11: true,
